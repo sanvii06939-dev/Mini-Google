@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mini Google 1998</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--card:#f4f4f0;--bd:#c9c9c0;--acc:#1a0dab;--mut:#666;--bad:#b3261e;--good:#0b7a3b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16161a;--fg:#ececec;--card:#222228;--bd:#444;--acc:#8ab4f8;--mut:#a0a0a0;--bad:#f2837c;--good:#6fd39a}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Times New Roman",Georgia,serif;padding:16px}
+h1{text-align:center;font-size:2.4rem;margin:8px 0 0;letter-spacing:1px}
+h1 span:nth-child(1),h1 span:nth-child(4){color:#4285f4}h1 span:nth-child(2),h1 span:nth-child(6){color:#ea4335}h1 span:nth-child(3){color:#fbbc05}h1 span:nth-child(5){color:#34a853}
+.sub{text-align:center;color:var(--mut);margin:0 0 12px}
+form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+input{font:inherit;padding:8px;width:min(360px,70vw);border:2px inset var(--bd);background:var(--bg);color:var(--fg)}
+button{font:inherit;padding:8px 14px;border:2px outset var(--bd);background:var(--card);color:var(--fg);cursor:pointer}
+.info{text-align:center;font-size:.9rem;color:var(--mut);margin-bottom:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:1000px;margin:auto}
+@media (max-width:700px){.cols{grid-template-columns:1fr}}
+.col{background:var(--card);border:1px solid var(--bd);padding:12px}
+.col h2{margin:0 0 2px;font-size:1.15rem}.tag{font-size:.85rem;color:var(--mut);margin-bottom:10px}
+.r{padding:8px 0;border-top:1px dotted var(--bd)}
+.r a{color:var(--acc);font-size:1.05rem}.r .u{color:var(--good);font-size:.85rem;word-break:break-all}
+.r .s{font-size:.95rem}.r .sc{font-size:.8rem;color:var(--mut)}
+.n{font-weight:bold;margin-right:4px}.spam{color:var(--bad);font-size:.8rem}
+table{border-collapse:collapse;width:100%;font-size:.85rem;margin-top:6px}
+td,th{border:1px solid var(--bd);padding:3px 6px;text-align:left}
+.wrap{max-width:1000px;margin:16px auto 0;overflow-x:auto}
+</style>
+</head>
+<body>
+<h1><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span> <small style="font-size:.9rem">mini · 1998</small></h1>
+<p class="sub">Left: 1998 se pehle (keyword counting) · Right: 1998 ke baad (PageRank)</p>
+<form id="f"><input id="q" value="pizza" autocomplete="off" aria-label="Search"><button>Search</button></form>
+<div class="info" id="chips">Try: <a href="#" data-q="cricket">cricket</a> · <a href="#" data-q="python">python</a> · <a href="#" data-q="movie">movie</a> · <a href="#" data-q="travel">travel</a> · <a href="#" data-q="phone">phone</a> · <a href="#" data-q="students">students</a> · <a href="#" data-q="food">food</a> · <a href="#" data-q="yoga exam">yoga exam</a></div>
+<div class="info" id="info"></div>
+<details open style="max-width:1000px;margin:0 auto 12px"><summary>Apna data daalo (CSV: page,url,text,links_to)</summary>
+<textarea id="data" rows="7" style="width:100%;box-sizing:border-box;font:12px monospace;background:var(--bg);color:var(--fg);border:1px solid var(--bd)"></textarea>
+<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" id="load">Load data</button><input type="file" id="file" accept=".csv,.txt" style="width:auto"><button type="button" id="big">Dobara generate (1,00,000 pages)</button></div></details>
+<div class="cols">
+ <div class="col"><h2>◀ Before 1998 (AltaVista style)</h2><div class="tag">Rank = kitni baar word text mein aaya</div><div id="L"></div></div>
+ <div class="col"><h2>After 1998 (Google PageRank) ▶</h2><div class="tag">Rank = kitne important pages us page ko link karte hain</div><div id="R"></div></div>
+</div>
+<div class="wrap"><table id="pr"></table></div>
+<script>
+const CSV=`page,url,text,links_to
+1,pune-food-guide.com,Where to eat in Pune - vada pav and biryani and pizza,2
+2,best-pizza-pune.com,Fresh wood-fired pizza made daily - try our cheese pizza,1;3
+3,college-canteen-blog.com,Student reviews of canteen food and chai and Friday pizza,2;4
+4,pizza-recipes-home.com,Make pizza at home - pizza dough and pizza sauce,2;5
+5,cheap-eats-pune.com,Good food under 100 rupees - misal and dosa and pizza slices,2
+6,pizza-pizza-pizza.com,pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza,1
+7,cricket-live-scores.com,Live cricket scores and IPL match updates and cricket news,8;9
+8,ipl-fan-zone.com,IPL teams and players and cricket stats and match tickets,7;9
+9,cricket-coaching-pune.com,Learn cricket batting and bowling tips from coaches,7
+10,cricket-cricket-cricket.com,cricket cricket cricket cricket cricket cricket cricket cricket cricket,7
+11,learn-python-free.com,Learn Python programming for beginners with free tutorials,12;13
+12,python-projects-hub.com,Python project ideas and coding practice for students,11;13
+13,linux-command-guide.com,Linux command line basics and terminal tips for beginners,11
+14,html-css-tutorial.com,HTML and CSS tutorial to build a portfolio website,11;12
+15,coding-coding-coding.com,coding coding coding coding coding coding coding coding coding,11
+16,bollywood-movie-reviews.com,Bollywood movie reviews and box office news,17;18
+17,new-movies-ott.com,New movies and web series on OTT this week,16;18
+18,movie-songs-hub.com,Hit Bollywood songs and music playlist from latest movies,16;37
+19,movie-movie-movie.com,movie movie movie movie movie movie movie movie movie,16
+20,mumbai-travel-guide.com,Travel guide to Mumbai and Goa beaches and train tickets,21;22
+21,india-travel-tips.com,India travel tips and hotels and budget trips and train tickets,20;22
+22,himalaya-trek-blog.com,Himalaya trek guide and mountain travel tips,20;21
+23,travel-travel-travel.com,travel travel travel travel travel travel travel travel travel,20
+24,daily-health-tips.com,Daily health tips and yoga and fitness exercises at home,25;26
+25,healthy-diet-india.com,Healthy Indian diet plan and protein food and weight loss,24;26
+26,yoga-for-students.com,Yoga and sleep tips for students to reduce exam stress,24;27
+27,exam-study-tips.com,Exam study tips and maths practice and time table for students,26;28;11
+28,maths-help-online.com,Maths help with algebra and quadratic equations step by step,27
+29,college-life-india.com,College life in India and hostel food and friends and fun,27;3;30
+30,internship-jobs.com,Internship and job tips for engineering students and resume help,14;11;27
+31,smartphone-reviews.com,Smartphone reviews and best phones under 20000 rupees,32;33
+32,laptop-buying-guide.com,Laptop buying guide for students and coding,31;11
+33,phone-deals.com,Cheap phone deals and mobile offers and phone cases,31
+34,phone-phone-phone.com,phone phone phone phone phone phone phone phone phone,31
+35,chai-and-snacks.com,Best chai and snacks recipes and samosa and street food,1;5;36
+36,indian-recipes-home.com,Easy Indian recipes at home for biryani and dal and paneer,35;4
+37,guitar-music-lessons.com,Learn guitar and music practice for beginners,18`;
+const parse=csv=>{const rows=csv.trim().split(/\r?\n/).map(l=>l.trim()).filter(Boolean);if(rows.length&&/^page\s*,/i.test(rows[0]))rows.shift();
+const raw=rows.map(l=>{const c=l.split(",");if(c.length<3)return null;const k=c.length>=4?c.pop():"";const [p,u,...t]=c;return{p:p.trim(),url:u.trim().replace(/^\[([^\]]*)\]\(.*\)$/,"$1"),text:t.join(",").trim(),k}}).filter(Boolean);
+const idx={};raw.forEach((r,i)=>idx[r.p]=i+1);
+return raw.map((r,i)=>{let ls=r.k.split(";").map(x=>idx[x.trim()]).filter(Boolean);if(!ls.length)ls=raw.map((_,j)=>j+1);return{id:i+1,url:r.url,text:r.text,links:ls}})};
+let pages=parse(CSV);
+let N=pages.length,DONE=0;const ITER=100000,D=0.85;
+// PageRank: 100000 iterations
+function pagerank(){
+ let pr=new Array(N).fill(1/N);
+ let it=0;const T=performance.now();for(;it<ITER;it++){if(it%200===0&&performance.now()-T>2000)break;
+  const nx=new Array(N).fill((1-D)/N);
+  for(const p of pages){const share=pr[p.id-1]/p.links.length;for(const t of p.links)nx[t-1]+=D*share;}
+  pr=nx;
+ }
+ DONE=it;return pr;
+}
+let PR,ms;function recompute(){N=pages.length;const t0=performance.now();PR=pagerank();ms=Math.round(performance.now()-t0)}recompute();
+const STOP=new Set("a an the in on of for to and or is are at by with how what where".split(" "));
+const tf=(txt,term)=>{const c=term.replace(/[^a-z0-9]/g,"");return c?(txt.toLowerCase().match(new RegExp("\\b"+c+"(?:s|es)?\\b","g"))||[]).length:0};
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function row(i,p,sc,extra){return `<div class="r"><span class="n">${i}.</span><a href="#p${p.id}">${p.url}</a><div class="u">http://${p.url}</div><div class="s">${esc(p.text)}</div><div class="sc">${sc} ${extra||""}</div></div>`}
+function search(){
+ const terms=document.getElementById("q").value.toLowerCase().split(/\s+/).filter(t=>t&&!STOP.has(t));
+ const hits=pages.map(p=>({p,c:terms.reduce((a,t)=>a+tf(p.text+" "+p.url.replace(/[-.]/g," "),t),0)})).filter(h=>h.c>0);
+ const L=[...hits].sort((a,b)=>b.c-a.c);
+ const R=[...hits].sort((a,b)=>PR[b.p.id-1]-PR[a.p.id-1]);
+ document.getElementById("L").innerHTML=L.length?L.slice(0,20).map((h,i)=>row(i+1,h.p,"word count: "+h.c,h.c>=8?'<span class="spam">⚠ keyword stuffing jeet gaya!</span>':"")).join(""):"No results.";
+ document.getElementById("R").innerHTML=R.length?R.slice(0,20).map((h,i)=>row(i+1,h.p,"PageRank: "+PR[h.p.id-1].toPrecision(3))).join(""):"No results.";
+ document.getElementById("info").textContent=`${pages.length.toLocaleString()} pages · ${hits.length.toLocaleString()} result(s) (top 20 dikhaye) · PageRank ${DONE.toLocaleString()} baar iterate kiya (${ms} ms)`;
+}
+document.getElementById("f").addEventListener("submit",e=>{e.preventDefault();search()});
+const drawTable=()=>document.getElementById("pr").innerHTML="<tr><th>Page</th><th>URL</th><th>Links to</th><th>PageRank</th></tr>"+[...pages].sort((a,b)=>PR[b.id-1]-PR[a.id-1]).slice(0,15).map(p=>`<tr><td>${p.id}</td><td>${p.url}</td><td>${p.links.join(", ")}</td><td>${PR[p.id-1].toPrecision(3)}</td></tr>`).join("");
+document.getElementById("chips").addEventListener("click",e=>{const q=e.target.dataset&&e.target.dataset.q;if(q){e.preventDefault();document.getElementById("q").value=q;search()}});
+const ta=document.getElementById("data");ta.value=CSV;
+function load(csv){const ps=parse(csv);if(!ps.length){alert("Koi valid row nahi mili. Format: page,url,text,links_to");return}pages=ps;recompute();drawTable();search()}
+document.getElementById("load").onclick=()=>load(ta.value);
+document.getElementById("file").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{ta.value=t;load(t)})};
+document.getElementById("big").onclick=()=>{const W="pizza cricket python movie travel yoga exam phone chai music maths linux html food health college job laptop recipe news".split(" ");const n=100000,ps=[];
+for(let i=1;i<=n;i++){const w=[];for(let k=0;k<8;k++)w.push(W[(Math.random()*W.length)|0]);const ls=new Set();for(let k=0;k<4;k++){const t=1+((Math.random()**2*n)|0);if(t!==i)ls.add(t)}if(!ls.size)ls.add(i%n+1);ps.push({id:i,url:w[0]+"-"+w[1]+"-"+i+".com",text:w.join(" "),links:[...ls]})}
+pages=ps;recompute();drawTable();search()};
+const TOP={pizza:"cheese dough sauce oven toppings slice",cricket:"IPL batting bowling wicket scores stadium",python:"coding loops functions tutorial beginners projects",movie:"Bollywood review OTT actor songs trailer",travel:"Goa hotel train trek beach budget",yoga:"fitness sleep diet stress exercise health",exam:"maths notes syllabus timetable revision marks",phone:"camera battery android price offers review",laptop:"coding RAM processor student deals review",chai:"samosa biscuit snacks masala cutting kulhad",biryani:"chicken rice spices hyderabadi veg recipe",music:"guitar songs playlist singer concert piano",college:"hostel canteen friends fees placement fest",internship:"resume interview jobs skills company stipend",linux:"terminal commands ubuntu files bash install",html:"css website portfolio layout javascript design",maths:"algebra quadratic equations formulas practice solutions",football:"goals league players match coach transfer",fashion:"clothes shoes style sale trends festive",gym:"protein workout running diet muscles trainer",cars:"mileage petrol electric service price showroom",bikes:"scooter helmet mileage service price rides",shopping:"offers sale discount coupons delivery online",news:"politics weather city headlines sports business",gaming:"esports console streaming mobile tips graphics",photography:"camera editing lens portrait reels tips",cooking:"dal paneer roti sabzi dessert easy",study:"notes focus books library timetable tips",money:"savings UPI loan budget invest bank",science:"space ISRO physics chemistry biology experiments",history:"Mughal freedom kings forts museum books",health:"doctor medicine sleep diet hospital checkup"};
+const TPL=[(t,a,b,c)=>`Where to find ${t} in ${c} - ${a} and ${b} and ${t}`,(t,a,b,c)=>`Best ${t} ${a} in ${c} - try our ${b}`,(t,a,b)=>`Student reviews of ${t} and ${a} and ${b}`,(t,a,b)=>`Learn ${t} at home - ${a} and ${b} for beginners`,(t,a,b)=>`Good ${t} under 100 rupees - ${a} and ${b} and ${t} deals`,(t,a,b)=>`${t} news and updates - ${a} ${b} this week`,(t,a,b)=>`Complete ${t} guide - ${a} tips and ${b} tricks`];
+function mk(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function genPages(total){const rnd=mk(1998),ps=parse(CSV),names=Object.keys(TOP),rel=names.map(n=>TOP[n].split(" ")),C="Pune Mumbai Delhi Sonipat Bengaluru Hyderabad".split(" "),lists=names.map(()=>[]),pick=a=>a[(rnd()*a.length)|0],hub=a=>a[(rnd()*rnd()*a.length)|0],first=ps.length+1;
+for(let i=first;i<=total;i++){const ti=(rnd()*names.length)|0,t=names[ti],w=rel[ti],L=lists[ti];
+if(i%500===0){ps.push({id:i,url:`${t}-${t}-${t}-${i}.com`,text:Array(10).fill(t).join(" "),links:[L.length?L[0]:1]});continue}
+const a=pick(w),b=pick(w),c=pick(C),ls=new Set();
+for(let k=0;k<4;k++){if(L.length&&rnd()<0.75)ls.add(hub(L));else ls.add(first+((rnd()*rnd()*(i-first))|0))}
+ls.delete(i);if(!ls.size)ls.add(1);
+ps.push({id:i,url:`${pick(["best","top","my","desi","easy"])}-${t}-${a}-${i}.com`,text:pick(TPL)(t,a,b,c),links:[...ls]});L.push(i)}
+return ps}
+function genAndShow(){pages=genPages(100000);recompute();drawTable();search()}
+document.getElementById("big").onclick=genAndShow;
+genAndShow();
+</script>
+</body>
+</html>
